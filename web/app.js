@@ -2199,7 +2199,12 @@ function webViewerOpenFile() {
   }
 }
 function webViewerPrint() {
-  window.print();
+  printJS && printJS({
+    printable: getDocumentFromHtml(),
+    type: 'pdf',
+    showModal: true,
+    modalMessage: 'Retrieving document from external server...'
+  });
 }
 function webViewerDownload() {
   PDFViewerApplication.download();
