@@ -34,6 +34,7 @@ import {
   ScrollMode,
   SpreadMode,
   TextLayerMode,
+  getDocumentFromHtml,
 } from "./ui_utils.js";
 import { AppOptions, OptionKind } from "./app_options.js";
 import {
