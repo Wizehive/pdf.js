@@ -993,14 +993,6 @@ function apiPageModeToSidebarView(mode) {
   }
   return SidebarView.NONE; // Default value.
 }
-
-function getDocumentFromHtml() {
-  return (
-    document.getElementById("defaultUrl") &&
-    document.getElementById("defaultUrl").value
-  );
-}
-
 function getDownloadUrlFromHtml() {
   const downloadUrl =
     document.getElementById("downloadUrl") &&
@@ -1012,6 +1004,13 @@ function getDownloadUrlFromHtml() {
     return downloadUrl;
   }
   return getDocumentFromHtml();
+}
+
+function getDocumentFromHtml() {
+  return (
+    document.getElementById("defaultUrl") &&
+    document.getElementById("defaultUrl").value
+  );
 }
 
 export {
@@ -1027,8 +1026,8 @@ export {
   DEFAULT_SCALE_VALUE,
   EventBus,
   getActiveOrFocusedElement,
-  getDownloadUrlFromHtml,
   getDocumentFromHtml,
+  getDownloadUrlFromHtml,
   getOutputScale,
   getPageSizeInches,
   getVisibleElements,

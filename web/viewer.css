@@ -1923,7 +1923,6 @@ html[dir="rtl"] #documentPropertiesOverlay .row > * {
 
 .toolbarButton.showText {
   width: auto;
-
 }
 
 .toolbarButton.showText > span {
@@ -1931,5 +1930,5 @@ html[dir="rtl"] #documentPropertiesOverlay .row > * {
   width: inherit;
   height: inherit;
   text-align: left;
-  padding: 5px 0 0 20px
+  padding: 5px 0 0 20px;
 }

@@ -13,8 +13,7 @@
  * limitations under the License.
  */
 /* globals PDFBug, Stats */
-/*global someFunction, printJS*/
-/*eslint no-undef: "error"*/
+/* global someFunction, printJS */
 import {
   animationStarted,
   apiPageLayoutToSpreadMode,
@@ -1867,8 +1866,7 @@ const PDFViewerApplication = {
     this.pdfPresentationMode.request();
   },
 
-  triggerPrinting() {
-  },
+  triggerPrinting() {},
 
   bindEvents() {
     const { eventBus, _boundEvents } = this;
@@ -2517,7 +2515,9 @@ function webViewerPresentationMode() {
 }
 
 function webViewerPrint() {
-  printJS && printJS({
+  // eslint-disable-next-line no-unused-expressions
+  printJS &&
+    printJS({
       printable: getDownloadUrlFromHtml(),
       type: "pdf",
       showModal: true,
@@ -2629,10 +2629,10 @@ function webViewerUpdateFindMatchesCount({ matchesCount }) {
 }
 
 function webViewerUpdateFindControlState({
- state,
- previous,
- matchesCount,
- rawQuery,
+  state,
+  previous,
+  matchesCount,
+  rawQuery,
 }) {
   if (PDFViewerApplication.supportsIntegratedFind) {
     PDFViewerApplication.externalServices.updateFindControlState({
