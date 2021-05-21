@@ -302,8 +302,6 @@ window.addEventListener(
       !event.altKey &&
       (!event.shiftKey || window.chrome || window.opera)
     ) {
-     // window.print();
-
       // The (browser) print dialog cannot be prevented from being shown in
       // IE11.
       event.preventDefault();

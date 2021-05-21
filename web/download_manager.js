@@ -19,7 +19,7 @@ import { viewerCompatibilityParams } from "./viewer_compatibility.js";
 if (typeof PDFJSDev !== "undefined" && !PDFJSDev.test("CHROME || GENERIC")) {
   throw new Error(
     'Module "pdfjs-web/download_manager" shall not be used ' +
-    "outside CHROME and GENERIC builds."
+      "outside CHROME and GENERIC builds."
   );
 }
 

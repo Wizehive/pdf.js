@@ -13,7 +13,8 @@
  * limitations under the License.
  */
 /* globals PDFBug, Stats */
-
+/*global someFunction, printJS*/
+/*eslint no-undef: "error"*/
 import {
   animationStarted,
   apiPageLayoutToSpreadMode,
@@ -22,6 +23,7 @@ import {
   DEFAULT_SCALE_VALUE,
   EventBus,
   getActiveOrFocusedElement,
+  getDownloadUrlFromHtml,
   isValidRotation,
   isValidScrollMode,
   isValidSpreadMode,
@@ -36,8 +38,6 @@ import {
   SidebarView,
   SpreadMode,
   TextLayerMode,
-  getDownloadUrlFromHtml
-
 } from "./ui_utils.js";
 import { AppOptions, OptionKind } from "./app_options.js";
 import {
@@ -1513,8 +1513,8 @@ const PDFViewerApplication = {
     // Provides some basic debug information
     console.log(
       `PDF ${pdfDocument.fingerprint} [${info.PDFFormatVersion} ` +
-      `${(info.Producer || "-").trim()} / ${(info.Creator || "-").trim()}] ` +
-      `(PDF.js: ${version || "-"})`
+        `${(info.Producer || "-").trim()} / ${(info.Creator || "-").trim()}] ` +
+        `(PDF.js: ${version || "-"})`
     );
 
     let pdfTitle = info?.Title;
@@ -1868,10 +1868,6 @@ const PDFViewerApplication = {
   },
 
   triggerPrinting() {
-    if (!this.supportsPrinting) {
-      return;
-    }
-    //window.print();
   },
 
   bindEvents() {
@@ -2522,11 +2518,11 @@ function webViewerPresentationMode() {
 
 function webViewerPrint() {
   printJS && printJS({
-    printable: getDownloadUrlFromHtml(),
-    type: 'pdf',
-    showModal: true,
-    modalMessage: 'Retrieving document from external server...'
-  });
+      printable: getDownloadUrlFromHtml(),
+      type: "pdf",
+      showModal: true,
+      modalMessage: "Retrieving document from external server...",
+    });
 }
 
 function webViewerDownload() {
@@ -2633,11 +2629,11 @@ function webViewerUpdateFindMatchesCount({ matchesCount }) {
 }
 
 function webViewerUpdateFindControlState({
-                                           state,
-                                           previous,
-                                           matchesCount,
-                                           rawQuery,
-                                         }) {
+ state,
+ previous,
+ matchesCount,
+ rawQuery,
+}) {
   if (PDFViewerApplication.supportsIntegratedFind) {
     PDFViewerApplication.externalServices.updateFindControlState({
       result: state,

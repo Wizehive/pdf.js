@@ -995,13 +995,20 @@ function apiPageModeToSidebarView(mode) {
 }
 
 function getDocumentFromHtml() {
-  return document.getElementById('defaultUrl') && document.getElementById('defaultUrl').value;
+  return (
+    document.getElementById("defaultUrl") &&
+    document.getElementById("defaultUrl").value
+  );
 }
 
 function getDownloadUrlFromHtml() {
-  var downloadUrl = document.getElementById('downloadUrl') && document.getElementById('downloadUrl').value;
-  var fileExtension = document.getElementById('fileExtension') && document.getElementById('fileExtension').value;
-  if (fileExtension && fileExtension !== 'pdf' && downloadUrl) {
+  const downloadUrl =
+    document.getElementById("downloadUrl") &&
+    document.getElementById("downloadUrl").value;
+  const fileExtension =
+    document.getElementById("fileExtension") &&
+    document.getElementById("fileExtension").value;
+  if (fileExtension && fileExtension !== "pdf" && downloadUrl) {
     return downloadUrl;
   }
   return getDocumentFromHtml();
@@ -1020,6 +1027,8 @@ export {
   DEFAULT_SCALE_VALUE,
   EventBus,
   getActiveOrFocusedElement,
+  getDownloadUrlFromHtml,
+  getDocumentFromHtml,
   getOutputScale,
   getPageSizeInches,
   getVisibleElements,
@@ -1050,7 +1059,4 @@ export {
   waitOnEventOrTimeout,
   WaitOnType,
   watchScroll,
-  getDownloadUrlFromHtml,
-  getDocumentFromHtml
-
 };

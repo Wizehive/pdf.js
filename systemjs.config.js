@@ -12,11 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* eslint-disable no-var */
 
 "use strict";
 
-(function() {
+(function () {
   var baseLocation;
   if (typeof document !== "undefined") {
     baseLocation = new URL("./", document.currentScript.src);
