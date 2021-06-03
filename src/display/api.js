@@ -695,7 +695,15 @@ class PDFDocumentProxy {
    * @type {boolean} True if only XFA form.
    */
   get isPureXfa() {
-    return this._pdfInfo.isPureXfa;
+    return !!this._transport._htmlForXfa;
+  }
+
+  /**
+   * @type {Object | null} An object representing a HTML tree structure
+   * to render the XFA, or `null` when no XFA form exists.
+   */
+  get allXfaHtml() {
+    return this._transport._htmlForXfa;
   }
 
   /**
@@ -708,11 +716,15 @@ class PDFDocumentProxy {
   }
 
   /**
-   * @param {{num: number, gen: number}} ref - The page reference. Must have
-   *   the `num` and `gen` properties.
-   * @returns {Promise<{num: number, gen: number}>} A promise that is resolved
-   *   with the page index (starting from zero) that is associated with the
-   *   reference.
+   * @typedef {Object} RefProxy
+   * @property {number} num
+   * @property {number} gen
+   */
+
+  /**
+   * @param {RefProxy} ref - The page reference.
+   * @returns {Promise<number>} A promise that is resolved with the page index,
+   *   starting from zero, that is associated with the reference.
    */
   getPageIndex(ref) {
     return this._transport.getPageIndex(ref);
@@ -730,8 +742,9 @@ class PDFDocumentProxy {
 
   /**
    * @param {string} id - The named destination to get.
-   * @returns {Promise<Array<any>>} A promise that is resolved with all
-   *   information of the given named destination.
+   * @returns {Promise<Array<any> | null>} A promise that is resolved with all
+   *   information of the given named destination, or `null` when the named
+   *   destination is not present in the PDF file.
    */
   getDestination(id) {
     return this._transport.getDestination(id);
@@ -957,12 +970,6 @@ class PDFDocumentProxy {
    *   {Uint8Array} containing the full data of the saved document.
    */
   saveDocument() {
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) &&
-      arguments.length > 0
-    ) {
-      deprecated("saveDocument no longer accepts any options.");
-    }
     if (
       (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) &&
       this._transport.annotationStorage.size <= 0
@@ -1254,8 +1261,8 @@ class PDFPageProxy {
    *   are {Object} with a name, attributes (class, style, ...), value and
    *   children, very similar to a HTML DOM tree), or `null` if no XFA exists.
    */
-  getXfa() {
-    return (this._xfaPromise ||= this._transport.getPageXfa(this._pageIndex));
+  async getXfa() {
+    return this._transport._htmlForXfa?.children[this._pageIndex] || null;
   }
 
   /**
@@ -1277,16 +1284,6 @@ class PDFPageProxy {
     includeAnnotationStorage = false,
     optionalContentConfigPromise = null,
   }) {
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) &&
-      arguments[0]?.annotationStorage !== undefined
-    ) {
-      deprecated(
-        "render no longer accepts an `annotationStorage` option, " +
-          "please use the `includeAnnotationStorage`-boolean instead."
-      );
-      includeAnnotationStorage ||= !!arguments[0].annotationStorage;
-    }
     if (this._stats) {
       this._stats.time("Overall");
     }
@@ -1551,7 +1548,6 @@ class PDFPageProxy {
     this.objs.clear();
     this._annotationsPromise = null;
     this._jsActionsPromise = null;
-    this._xfaPromise = null;
     this._structTreePromise = null;
     this.pendingCleanup = false;
     return Promise.all(waitOn);
@@ -1587,7 +1583,6 @@ class PDFPageProxy {
     this.objs.clear();
     this._annotationsPromise = null;
     this._jsActionsPromise = null;
-    this._xfaPromise = null;
     this._structTreePromise = null;
     if (resetStats && this._stats) {
       this._stats = new StatTimer();
@@ -1799,7 +1794,10 @@ class LoopbackPort {
         }
         return result;
       }
-      result = Array.isArray(value) ? [] : {};
+      if (value instanceof URL) {
+        throw new Error(`LoopbackPort.postMessage - cannot clone: ${value}`);
+      }
+      result = Array.isArray(value) ? [] : Object.create(null);
       cloned.set(value, result); // Adding to cache now for cyclic references.
       // Cloning all value and object properties, however ignoring properties
       // defined via getter.
@@ -2452,6 +2450,8 @@ class WorkerTransport {
 
     messageHandler.on("GetDoc", ({ pdfInfo }) => {
       this._numPages = pdfInfo.numPages;
+      this._htmlForXfa = pdfInfo.htmlForXfa;
+      delete pdfInfo.htmlForXfa;
       loadingTask._capability.resolve(new PDFDocumentProxy(pdfInfo, this));
     });
 
@@ -2804,12 +2804,6 @@ class WorkerTransport {
 
   getPageJSActions(pageIndex) {
     return this.messageHandler.sendWithPromise("GetPageJSActions", {
-      pageIndex,
-    });
-  }
-
-  getPageXfa(pageIndex) {
-    return this.messageHandler.sendWithPromise("GetPageXfa", {
       pageIndex,
     });
   }

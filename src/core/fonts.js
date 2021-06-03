@@ -722,6 +722,11 @@ function createPostTable(properties) {
   ); // maxMemType1
 }
 
+function createPostscriptName(name) {
+  // See https://docs.microsoft.com/en-us/typography/opentype/spec/recom#name.
+  return name.replace(/[^\x21-\x7E]|[[\](){}<>/%]/g, "").slice(0, 63);
+}
+
 function createNameTable(name, proto) {
   if (!proto) {
     proto = [[], []]; // no strings and unicode strings
@@ -734,7 +739,7 @@ function createNameTable(name, proto) {
     proto[0][3] || "uniqueID", // 3.Unique ID
     proto[0][4] || name, // 4.Full font name
     proto[0][5] || "Version 0.11", // 5.Version
-    proto[0][6] || "", // 6.Postscript name
+    proto[0][6] || createPostscriptName(name), // 6.Postscript name
     proto[0][7] || "Unknown", // 7.Trademark
     proto[0][8] || "Unknown", // 8.Manufacturer
     proto[0][9] || "Unknown", // 9.Designer
@@ -802,7 +807,8 @@ class Font {
     this.missingFile = false;
     this.cssFontInfo = properties.cssFontInfo;
 
-    this.glyphCache = Object.create(null);
+    this._charsCache = Object.create(null);
+    this._glyphCache = Object.create(null);
 
     this.isSerifFont = !!(properties.flags & FontFlags.Serif);
     this.isSymbolicFont = !!(properties.flags & FontFlags.Symbolic);
@@ -1968,15 +1974,15 @@ class Font {
 
     // prettier-ignore
     const TTOpsStackDeltas = [
-        0, 0, 0, 0, 0, 0, 0, 0, -2, -2, -2, -2, 0, 0, -2, -5,
-        -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, -1, 0, -1, -1, -1, -1,
-        1, -1, -999, 0, 1, 0, -1, -2, 0, -1, -2, -1, -1, 0, -1, -1,
-        0, 0, -999, -999, -1, -1, -1, -1, -2, -999, -2, -2, -999, 0, -2, -2,
-        0, 0, -2, 0, -2, 0, 0, 0, -2, -1, -1, 1, 1, 0, 0, -1,
-        -1, -1, -1, -1, -1, -1, 0, 0, -1, 0, -1, -1, 0, -999, -1, -1,
-        -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        -2, -999, -999, -999, -999, -999, -1, -1, -2, -2, 0, 0, 0, 0, -1, -1,
-        -999, -2, -2, 0, 0, -1, -2, -2, 0, 0, 0, -1, -1, -1, -2];
+      0, 0, 0, 0, 0, 0, 0, 0, -2, -2, -2, -2, 0, 0, -2, -5,
+      -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, -1, 0, -1, -1, -1, -1,
+      1, -1, -999, 0, 1, 0, -1, -2, 0, -1, -2, -1, -1, 0, -1, -1,
+      0, 0, -999, -999, -1, -1, -1, -1, -2, -999, -2, -2, -999, 0, -2, -2,
+      0, 0, -2, 0, -2, 0, 0, 0, -2, -1, -1, 1, 1, 0, 0, -1,
+      -1, -1, -1, -1, -1, -1, 0, 0, -1, 0, -1, -1, 0, -999, -1, -1,
+      -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      -2, -999, -999, -999, -999, -999, -1, -1, -2, -2, 0, 0, 0, 0, -1, -1,
+      -999, -2, -2, 0, 0, -1, -2, -2, 0, 0, 0, -1, -1, -1, -2];
     // 0xC0-DF == -1 and 0xE0-FF == -2
 
     function sanitizeTTProgram(table, ttContext) {
@@ -2946,7 +2952,7 @@ class Font {
       }
     }
 
-    let glyph = this.glyphCache[charcode];
+    let glyph = this._glyphCache[charcode];
     if (
       !glyph ||
       !glyph.matchesForCache(
@@ -2970,57 +2976,46 @@ class Font {
         isSpace,
         isInFont
       );
-      this.glyphCache[charcode] = glyph;
+      this._glyphCache[charcode] = glyph;
     }
     return glyph;
   }
 
   charsToGlyphs(chars) {
-    let charsCache = this.charsCache;
-    let glyphs, glyph, charcode;
-
-    // if we translated this string before, just grab it from the cache
-    if (charsCache) {
-      glyphs = charsCache[chars];
-      if (glyphs) {
-        return glyphs;
-      }
+    // If we translated this string before, just grab it from the cache.
+    let glyphs = this._charsCache[chars];
+    if (glyphs) {
+      return glyphs;
     }
-
-    // lazily create the translation cache
-    if (!charsCache) {
-      charsCache = this.charsCache = Object.create(null);
-    }
-
     glyphs = [];
-    const charsCacheKey = chars;
-    let i = 0,
-      ii;
 
     if (this.cMap) {
-      // composite fonts have multi-byte strings convert the string from
-      // single-byte to multi-byte
-      const c = Object.create(null);
-      while (i < chars.length) {
+      // Composite fonts have multi-byte strings, convert the string from
+      // single-byte to multi-byte.
+      const c = Object.create(null),
+        ii = chars.length;
+      let i = 0;
+      while (i < ii) {
         this.cMap.readCharCode(chars, i, c);
-        charcode = c.charcode;
-        const length = c.length;
+        const { charcode, length } = c;
         i += length;
         // Space is char with code 0x20 and length 1 in multiple-byte codes.
-        const isSpace = length === 1 && chars.charCodeAt(i - 1) === 0x20;
-        glyph = this._charToGlyph(charcode, isSpace);
+        const glyph = this._charToGlyph(
+          charcode,
+          length === 1 && chars.charCodeAt(i - 1) === 0x20
+        );
         glyphs.push(glyph);
       }
     } else {
-      for (i = 0, ii = chars.length; i < ii; ++i) {
-        charcode = chars.charCodeAt(i);
-        glyph = this._charToGlyph(charcode, charcode === 0x20);
+      for (let i = 0, ii = chars.length; i < ii; ++i) {
+        const charcode = chars.charCodeAt(i);
+        const glyph = this._charToGlyph(charcode, charcode === 0x20);
         glyphs.push(glyph);
       }
     }
 
-    // Enter the translated string into the cache
-    return (charsCache[charsCacheKey] = glyphs);
+    // Enter the translated string into the cache.
+    return (this._charsCache[chars] = glyphs);
   }
 
   /**
@@ -3052,7 +3047,7 @@ class Font {
   }
 
   get glyphCacheValues() {
-    return Object.values(this.glyphCache);
+    return Object.values(this._glyphCache);
   }
 
   /**

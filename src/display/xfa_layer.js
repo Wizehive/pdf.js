@@ -13,32 +13,129 @@
  * limitations under the License.
  */
 
+import { PageViewport } from "./display_utils.js";
+
 class XfaLayer {
-  static setAttributes(html, attrs) {
-    for (const [key, value] of Object.entries(attrs)) {
-      if (value === null || value === undefined) {
+  static setupStorage(html, fieldId, element, storage, intent) {
+    const storedData = storage.getValue(fieldId, { value: null });
+    switch (element.name) {
+      case "textarea":
+        html.textContent = storedData.value !== null ? storedData.value : "";
+        if (intent === "print") {
+          break;
+        }
+        html.addEventListener("input", event => {
+          storage.setValue(fieldId, { value: event.target.value });
+        });
+        break;
+      case "input":
+        if (element.attributes.type === "radio") {
+          if (storedData.value) {
+            html.setAttribute("checked", true);
+          }
+          if (intent === "print") {
+            break;
+          }
+          html.addEventListener("change", event => {
+            const { target } = event;
+            for (const radio of document.getElementsByName(target.name)) {
+              if (radio !== target) {
+                const id = radio.id;
+                storage.setValue(id.split("-")[0], { value: false });
+              }
+            }
+            storage.setValue(fieldId, { value: target.checked });
+          });
+        } else if (element.attributes.type === "checkbox") {
+          if (storedData.value) {
+            html.setAttribute("checked", true);
+          }
+          if (intent === "print") {
+            break;
+          }
+          html.addEventListener("input", event => {
+            storage.setValue(fieldId, { value: event.target.checked });
+          });
+        } else {
+          if (storedData.value !== null) {
+            html.setAttribute("value", storedData.value);
+          }
+          if (intent === "print") {
+            break;
+          }
+          html.addEventListener("input", event => {
+            storage.setValue(fieldId, { value: event.target.value });
+          });
+        }
+        break;
+      case "select":
+        if (storedData.value !== null) {
+          for (const option of element.children) {
+            if (option.attributes.value === storedData.value) {
+              option.attributes.selected = true;
+            }
+          }
+        }
+        html.addEventListener("input", event => {
+          const options = event.target.options;
+          const value =
+            options.selectedIndex === -1
+              ? null
+              : options[options.selectedIndex].value;
+          storage.setValue(fieldId, { value });
+        });
+        break;
+    }
+  }
+
+  static setAttributes(html, element, storage, intent) {
+    const { attributes } = element;
+    if (attributes.type === "radio") {
+      // Avoid to have a radio group when printing with the same as one
+      // already displayed.
+      attributes.name = `${attributes.name}-${intent}`;
+    }
+    for (const [key, value] of Object.entries(attributes)) {
+      if (value === null || value === undefined || key === "fieldId") {
         continue;
       }
 
       if (key !== "style") {
-        html.setAttribute(key, value);
+        if (key === "textContent") {
+          html.textContent = value;
+        } else {
+          html.setAttribute(key, value);
+        }
       } else {
         Object.assign(html.style, value);
       }
     }
+
+    // Set the value after the others to be sure overwrite
+    // any other values.
+    if (storage && attributes.fieldId !== undefined) {
+      this.setupStorage(html, attributes.fieldId, element, storage);
+    }
   }
 
   static render(parameters) {
+    const storage = parameters.annotationStorage;
     const root = parameters.xfa;
+    const intent = parameters.intent;
     const rootHtml = document.createElement(root.name);
     if (root.attributes) {
-      XfaLayer.setAttributes(rootHtml, root.attributes);
+      this.setAttributes(rootHtml, root);
     }
     const stack = [[root, -1, rootHtml]];
 
     const rootDiv = parameters.div;
     rootDiv.appendChild(rootHtml);
-    const coeffs = parameters.viewport.transform.join(",");
+
+    let { viewport } = parameters;
+    if (!(viewport instanceof PageViewport)) {
+      viewport = new PageViewport(viewport);
+    }
+    const coeffs = viewport.transform.join(",");
     rootDiv.style.transform = `matrix(${coeffs})`;
 
     // Set defaults.
@@ -65,7 +162,7 @@ class XfaLayer {
       const childHtml = document.createElement(name);
       html.appendChild(childHtml);
       if (child.attributes) {
-        XfaLayer.setAttributes(childHtml, child.attributes);
+        this.setAttributes(childHtml, child, storage, intent);
       }
 
       if (child.children && child.children.length > 0) {
