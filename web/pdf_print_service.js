@@ -227,6 +227,8 @@ PDFPrintService.prototype = {
 };
 
 const print = window.print;
+
+/*
 window.print = function () {
   if (activeService) {
     console.warn("Ignored window.print() because of a pending print job.");
@@ -271,7 +273,7 @@ window.print = function () {
       });
   }
 };
-
+*/
 function dispatchEvent(eventType) {
   const event = document.createEvent("CustomEvent");
   event.initCustomEvent(eventType, false, false, "custom");
@@ -307,8 +309,6 @@ window.addEventListener(
       !event.altKey &&
       (!event.shiftKey || window.chrome || window.opera)
     ) {
-      window.print();
-
       // The (browser) print dialog cannot be prevented from being shown in
       // IE11.
       event.preventDefault();

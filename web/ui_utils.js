@@ -995,6 +995,25 @@ function apiPageModeToSidebarView(mode) {
   }
   return SidebarView.NONE; // Default value.
 }
+function getDownloadUrlFromHtml() {
+  const downloadUrl =
+    document.getElementById("downloadUrl") &&
+    document.getElementById("downloadUrl").value;
+  const fileExtension =
+    document.getElementById("fileExtension") &&
+    document.getElementById("fileExtension").value;
+  if (fileExtension && fileExtension !== "pdf" && downloadUrl) {
+    return downloadUrl;
+  }
+  return getDocumentFromHtml();
+}
+
+function getDocumentFromHtml() {
+  return (
+    document.getElementById("defaultUrl") &&
+    document.getElementById("defaultUrl").value
+  );
+}
 
 function getXfaHtmlForPrinting(printContainer, pdfDocument) {
   const xfaHtml = pdfDocument.allXfaHtml;
@@ -1032,6 +1051,8 @@ export {
   DEFAULT_SCALE_VALUE,
   EventBus,
   getActiveOrFocusedElement,
+  getDocumentFromHtml,
+  getDownloadUrlFromHtml,
   getOutputScale,
   getPageSizeInches,
   getVisibleElements,
