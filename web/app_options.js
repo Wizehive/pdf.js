@@ -34,7 +34,7 @@ const defaultOptions = {
   },
   defaultUrl: {
     /** @type {string} */
-    value: "",
+    value: "compressed.tracemonkey-pldi-09.pdf",
     kind: OptionKind.VIEWER,
   },
   defaultZoomValue: {
@@ -164,7 +164,7 @@ const defaultOptions = {
     value:
       typeof PDFJSDev === "undefined" || !PDFJSDev.test("PRODUCTION")
         ? "../external/bcmaps/"
-        : "/vendors/pdfjs/cmaps/",
+        : "../web/cmaps/",
     kind: OptionKind.API,
   },
   disableAutoFetch: {
@@ -233,7 +233,7 @@ const defaultOptions = {
     value:
       typeof PDFJSDev === "undefined" || !PDFJSDev.test("PRODUCTION")
         ? "../src/worker_loader.js"
-        : "/vendors/pdfjs/pdf.worker.js",
+        : "../build/pdf.worker.js",
     kind: OptionKind.WORKER,
   },
 };
@@ -256,7 +256,7 @@ if (
     value:
       typeof PDFJSDev === "undefined" || !PDFJSDev.test("PRODUCTION")
         ? "../build/dev-sandbox/pdf.sandbox.js"
-        : "/vendors/pdfjs/pdf.sandbox.js",
+        : "../build/pdf.sandbox.js",
     kind: OptionKind.VIEWER,
   };
 
@@ -269,7 +269,7 @@ if (
   };
   defaultOptions.sandboxBundleSrc = {
     /** @type {string} */
-    value: "/vendors/pdfjs/pdf.sandbox.js",
+    value: "../build/pdf.sandbox.js",
     kind: OptionKind.VIEWER,
   };
 }

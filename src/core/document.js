@@ -146,8 +146,7 @@ class Page {
 
   _getBoundingBox(name) {
     if (this.xfaData) {
-      const { width, height } = this.xfaData.attributes.style;
-      return [0, 0, parseInt(width), parseInt(height)];
+      return this.xfaData.bbox;
     }
 
     const box = this._getInheritableProperty(name, /* getArray = */ true);
@@ -241,7 +240,9 @@ class Page {
 
   get xfaData() {
     if (this.xfaFactory) {
-      return shadow(this, "xfaData", this.xfaFactory.getPage(this.pageIndex));
+      return shadow(this, "xfaData", {
+        bbox: this.xfaFactory.getBoundingBox(this.pageIndex),
+      });
     }
     return shadow(this, "xfaData", null);
   }
@@ -524,9 +525,9 @@ class Page {
 }
 
 const PDF_HEADER_SIGNATURE = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d]);
-// prettier-ignore
 const STARTXREF_SIGNATURE = new Uint8Array([
-  0x73, 0x74, 0x61, 0x72, 0x74, 0x78, 0x72, 0x65, 0x66]);
+  0x73, 0x74, 0x61, 0x72, 0x74, 0x78, 0x72, 0x65, 0x66,
+]);
 const ENDOBJ_SIGNATURE = new Uint8Array([0x65, 0x6e, 0x64, 0x6f, 0x62, 0x6a]);
 
 const FINGERPRINT_FIRST_BYTES = 1024;
@@ -851,8 +852,11 @@ class PDFDocument {
     return shadow(this, "xfaFaxtory", null);
   }
 
-  get isPureXfa() {
-    return this.xfaFactory !== null;
+  get htmlForXfa() {
+    if (this.xfaFactory) {
+      return this.xfaFactory.getPages();
+    }
+    return null;
   }
 
   async loadXfaFonts(handler, task) {
@@ -901,7 +905,11 @@ class PDFDocument {
       }
       const fontFamily = descriptor.get("FontFamily");
       const fontWeight = descriptor.get("FontWeight");
-      const italicAngle = descriptor.get("ItalicAngle");
+
+      // Angle is expressed in degrees counterclockwise in PDF
+      // when it's clockwise in CSS
+      // (see https://drafts.csswg.org/css-fonts-4/#valdef-font-style-oblique-angle)
+      const italicAngle = -descriptor.get("ItalicAngle");
       const cssFontInfo = { fontFamily, fontWeight, italicAngle };
 
       if (!validateCSSFont(cssFontInfo)) {

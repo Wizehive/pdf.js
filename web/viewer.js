@@ -230,7 +230,6 @@ function webViewerLoad() {
         document.dispatchEvent(event);
       }
     }
-
     PDFViewerApplication.run(config);
   }
 }

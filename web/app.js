@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 /* globals PDFBug, Stats */
-/* global someFunction, printJS */
+
 import {
   animationStarted,
   apiPageLayoutToSpreadMode,
@@ -22,7 +22,6 @@ import {
   DEFAULT_SCALE_VALUE,
   EventBus,
   getActiveOrFocusedElement,
-  getDownloadUrlFromHtml,
   isValidRotation,
   isValidScrollMode,
   isValidSpreadMode,
@@ -1866,7 +1865,12 @@ const PDFViewerApplication = {
     this.pdfPresentationMode.request();
   },
 
-  triggerPrinting() {},
+  triggerPrinting() {
+    if (!this.supportsPrinting) {
+      return;
+    }
+    window.print();
+  },
 
   bindEvents() {
     const { eventBus, _boundEvents } = this;
@@ -2513,18 +2517,9 @@ if (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) {
 function webViewerPresentationMode() {
   PDFViewerApplication.requestPresentationMode();
 }
-
 function webViewerPrint() {
-  // eslint-disable-next-line no-unused-expressions
-  printJS &&
-    printJS({
-      printable: getDownloadUrlFromHtml(),
-      type: "pdf",
-      showModal: true,
-      modalMessage: "Retrieving document from external server...",
-    });
+  PDFViewerApplication.triggerPrinting();
 }
-
 function webViewerDownload() {
   PDFViewerApplication.downloadOrSave({ sourceEventType: "download" });
 }

@@ -227,15 +227,15 @@ class CachedCanvases {
 
 function compileType3Glyph(imgData) {
   const POINT_TO_PROCESS_LIMIT = 1000;
+  const POINT_TYPES = new Uint8Array([
+    0, 2, 4, 0, 1, 0, 5, 4, 8, 10, 0, 8, 0, 2, 1, 0,
+  ]);
 
   const width = imgData.width,
     height = imgData.height,
     width1 = width + 1;
   let i, ii, j, j0;
   const points = new Uint8Array(width1 * (height + 1));
-  // prettier-ignore
-  const POINT_TYPES =
-      new Uint8Array([0, 2, 4, 0, 1, 0, 5, 4, 8, 10, 0, 8, 0, 2, 1, 0]);
 
   // decodes bit-packed mask data
   const lineSize = (width + 7) & ~7,
@@ -366,8 +366,7 @@ function compileType3Glyph(imgData) {
         points[p] &= (type >> 2) | (type << 2);
       }
 
-      coords.push(p % width1);
-      coords.push((p / width1) | 0);
+      coords.push(p % width1, (p / width1) | 0);
 
       if (!points[p]) {
         --count;
