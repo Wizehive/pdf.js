@@ -1511,8 +1511,8 @@ const PDFViewerApplication = {
     // Provides some basic debug information
     console.log(
       `PDF ${pdfDocument.fingerprint} [${info.PDFFormatVersion} ` +
-      `${(info.Producer || "-").trim()} / ${(info.Creator || "-").trim()}] ` +
-      `(PDF.js: ${version || "-"})`
+        `${(info.Producer || "-").trim()} / ${(info.Creator || "-").trim()}] ` +
+        `(PDF.js: ${version || "-"})`
     );
 
     let pdfTitle = info?.Title;
@@ -2624,11 +2624,11 @@ function webViewerUpdateFindMatchesCount({ matchesCount }) {
 }
 
 function webViewerUpdateFindControlState({
-                                           state,
-                                           previous,
-                                           matchesCount,
-                                           rawQuery,
-                                         }) {
+  state,
+  previous,
+  matchesCount,
+  rawQuery,
+}) {
   if (PDFViewerApplication.supportsIntegratedFind) {
     PDFViewerApplication.externalServices.updateFindControlState({
       result: state,

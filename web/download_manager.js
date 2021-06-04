@@ -119,8 +119,8 @@ class DownloadManager {
       return;
     }
     const blobUrl = URL.createObjectURL(blob);
-      download(blobUrl, filename);
-    }
+    download(blobUrl, filename);
   }
+}
 
 export { DownloadManager };

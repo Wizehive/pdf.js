@@ -136,17 +136,17 @@ class Toolbar {
       });
     }
     // The non-button elements within the toolbar.
-    pageNumber.addEventListener("click", function() {
+    pageNumber.addEventListener("click", function () {
       this.select();
     });
-    pageNumber.addEventListener("change", function() {
+    pageNumber.addEventListener("change", function () {
       self.eventBus.dispatch("pagenumberchanged", {
         source: self,
         value: this.value,
       });
     });
 
-    scaleSelect.addEventListener("change", function() {
+    scaleSelect.addEventListener("change", function () {
       if (this.value === "custom") {
         return;
       }
@@ -191,8 +191,8 @@ class Toolbar {
       } else {
         items.pageNumber.type = "number";
         this.l10n.get("of_pages", { pagesCount }).then(msg => {
-            items.numPages.textContent = msg;
-          });
+          items.numPages.textContent = msg;
+        });
       }
       items.pageNumber.max = pagesCount;
     }
@@ -200,8 +200,8 @@ class Toolbar {
     if (this.hasPageLabels) {
       items.pageNumber.value = this.pageLabel;
       this.l10n.get("page_of_pages", { pageNumber, pagesCount }).then(msg => {
-          items.numPages.textContent = msg;
-        });
+        items.numPages.textContent = msg;
+      });
     } else {
       items.pageNumber.value = pageNumber;
     }
